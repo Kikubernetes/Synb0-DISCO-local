@@ -98,10 +98,20 @@ Lets the container know the supplied T1 has already been skull stripped. As a de
 **--synthstrip**
 
 The option --synthstrip was added to allow freesurfer's synthstrip to be used for skullstripping inside the pipeline.
+As for this option, freesurfer >= 7.3.0 is necessary.
 
 **--threads=n**
 
 The option --threads=n was added to allow TOPUP to run in multi-threads. You can specify the number of cores you want to use (which will be passed to the "--nthr" option of topup). (However, the PC specs and FSL version must be compatible.)
+As for this option, fsl >= 6.0.6 is necessary.
+
+**--odd**
+If the image has a dimention of odd number, topup needs a specific configuration file.
+For now, we are using the config file for odd numbers included in fsl.
+
+**--hist**
+Use this option if you wanted to use histmatch to make the b0 image quality similar.
+As for this option, mrtrix3 is necessary.
 
 ## Inputs
 

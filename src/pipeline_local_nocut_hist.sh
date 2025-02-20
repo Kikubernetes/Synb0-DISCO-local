@@ -46,13 +46,13 @@ do
           TOPUP=0
           ;;
     	  -s|--stripped)
-	        MNI_T1_1_MM_FILE=$Synb0_ATLAS/mni_icbm152_t1_tal_nlin_asym_09c_mask.nii.gz
+	      MNI_T1_1_MM_FILE=$Synb0_ATLAS/mni_icbm152_t1_tal_nlin_asym_09c_mask.nii.gz
           ;;
         --synthstrip)
           export SYNTH_FLAG=1
-          ;;          
+          ;;
         --odd)
-          ODD_FLAG=1          
+          ODD_FLAG=1      
           ;;
         --hist)
           HIST_FLAG=1
@@ -91,37 +91,37 @@ antsApplyTransforms -d 3 -i ./OUTPUTS/b0_u_lin_atlas_2_5.nii.gz -r ./INPUTS/b0.n
 echo Applying slight smoothing to distorted b0
 fslmaths ./INPUTS/b0.nii.gz -s 1.15 ./OUTPUTS/b0_d_smooth.nii.gz
 
-
-# Output b0_all_masked.nii.gz anyway
-fslmaths ./OUTPUTS/b0_u.nii.gz -bin ./OUTPUTS/b0_u_mask.nii.gz
-fslmerge -t ./OUTPUTS/b0_all.nii.gz ./OUTPUTS/b0_d_smooth.nii.gz ./OUTPUTS/b0_u.nii.gz
-fslmaths ./OUTPUTS/b0_all.nii.gz -mul ./OUTPUTS/b0_u_mask.nii.gz ./OUTPUTS/b0_all_masked.nii.gz
-
+# if [[ $TOPUP -eq 1 ]]; then
+#     # Merge results and run through topup
+#     echo Running topup
+#     fslmerge -t ./OUTPUTS/b0_all.nii.gz ./OUTPUTS/b0_d_smooth.nii.gz ./OUTPUTS/b0_u.nii.gz
+#     topup -v --imain=./OUTPUTS/b0_all.nii.gz --datain=./INPUTS/acqparams.txt \
+#     --config=$Synb0_SRC/synb0.cnf --iout=./OUTPUTS/b0_all_topup.nii.gz --out=./OUTPUTS/topup $TOPUP_THREADS
+# fi
 
 # Histmatch b0_u to b0_d_smooth if HIST_FLAG=1
 if [[ $HIST_FLAG -eq 1 ]]; then
-    fslroi ./OUTPUTS/b0_all_masked.nii.gz ./OUTPUTS/D.nii.gz 0 1
-    fslroi ./OUTPUTS/b0_all_masked.nii.gz ./OUTPUTS/U.nii.gz 1 1
+    fslmerge -t ./OUTPUTS/b0_all.nii.gz ./OUTPUTS/b0_d_smooth.nii.gz ./OUTPUTS/b0_u.nii.gz
+    fslroi ./OUTPUTS/b0_all.nii.gz ./OUTPUTS/D.nii.gz 0 1
+    fslroi ./OUTPUTS/b0_all.nii.gz ./OUTPUTS/U.nii.gz 1 1
     mrhistmatch linear ./OUTPUTS/U.nii.gz ./OUTPUTS/D.nii.gz ./OUTPUTS/U_histmatched.nii.gz
-    mv ./OUTPUTS/b0_all_masked.nii.gz ./OUTPUTS/b0_all_masked_nohistmatch.nii.gz
-    fslmerge -t ./OUTPUTS/b0_all_masked.nii.gz ./OUTPUTS/D.nii.gz ./OUTPUTS/U_histmatched.nii.gz
+    mv ./OUTPUTS/b0_all.nii.gz ./OUTPUTS/b0_all_before_histmatch.nii.gz
+    fslmerge -t ./OUTPUTS/b0_all.nii.gz ./OUTPUTS/D.nii.gz ./OUTPUTS/U_histmatched.nii.gz
 fi
 
 if [[ $TOPUP -eq 1 ]]; then
     # Merge results and run through topup
     echo Running topup
-
     if [[ $ODD_FLAG -eq 1 ]]; then
-        topup -v --imain=./OUTPUTS/b0_all_masked.nii.gz --datain=./INPUTS/acqparams.txt \
+        topup -v --imain=./OUTPUTS/b0_all.nii.gz --datain=./INPUTS/acqparams.txt \
         --config=$Synb0_SRC/synb0_1.cnf --iout=./OUTPUTS/b0_all_topup.nii.gz --out=./OUTPUTS/topup \
         --fout=./OUTPUTS/field_map.nii.gz $TOPUP_THREADS
     else
-        topup -v --imain=./OUTPUTS/b0_all_masked.nii.gz --datain=./INPUTS/acqparams.txt \
+        topup -v --imain=./OUTPUTS/b0_all.nii.gz --datain=./INPUTS/acqparams.txt \
         --config=$Synb0_SRC/synb0.cnf --iout=./OUTPUTS/b0_all_topup.nii.gz --out=./OUTPUTS/topup \
         --fout=./OUTPUTS/field_map.nii.gz $TOPUP_THREADS
     fi
 fi
-
 
 # Done
 echo FINISHED!!!
